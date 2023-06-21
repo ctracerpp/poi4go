@@ -16,10 +16,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/ctracerpp/poi4go/poifs"
 	"io"
 	"os"
 	"path"
-	"poi4go/poifs"
 	"strings"
 	"unicode"
 )

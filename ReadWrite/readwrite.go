@@ -16,8 +16,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/ctracerpp/poi4go/poifs"
 	"os"
-	"poi4go/poifs"
 )
 
 func main() {

@@ -19,6 +19,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -52,7 +53,7 @@ type POIFSDocumentPath struct {
 	hascode    int
 }
 
-//Create POIFS FileSystem intended for writing
+// Create POIFS FileSystem intended for writing
 func NewFileSystem() *POIFSFileSystem {
 	fs := new(POIFSFileSystem)
 	fs.bigBlockSize = SMALLER_BIG_BLOCK_SIZE_DETAILS
@@ -64,7 +65,7 @@ func NewFileSystem() *POIFSFileSystem {
 	return fs
 }
 
-//Create Filesystem from Reader. Reader is read until EOF.
+// Create Filesystem from Reader. Reader is read until EOF.
 func FileSystemFromReader(r io.Reader) (*POIFSFileSystem, error) {
 	fs := NewFileSystem()
 
@@ -200,10 +201,15 @@ func (fs *POIFSFileSystem) processProperties(small_blocks, big_blocks BlockList,
 }
 
 func (fs *POIFSFileSystem) Remove(entry Entry) {
-	fs.Remove(entry)
-	if entry.IsDirectory() {
-		fs.deleteDocument(entry.(*DocumentNode).GetDocument())
+	if fs.property_table != nil {
+		fs.property_table.RemoveProperty(entry.GetProperty())
 	}
+	fmt.Println("type ", reflect.TypeOf(entry))
+	if entry.IsDocument() {
+		doc := entry.(*DocumentNode)
+		fs.deleteDocument(doc.document)
+	}
+
 }
 
 func (fs *POIFSFileSystem) GetRoot() (*DirectoryNode, error) {
@@ -239,10 +245,11 @@ func (fs *POIFSFileSystem) deleteDocument(doc *POIFSDocument) {
 
 	if found {
 		//Delete Entry
+		fs.documents[idx] = nil
 		fs.documents = append(fs.documents[:idx], fs.documents[idx+1:]...)
 		//Avoid potential memory leak, by nil out the pointer values
-		fs.documents[len(fs.documents)-1] = nil
-		fs.documents = fs.documents[:len(fs.documents)-1]
+		// fs.documents[len(fs.documents)-1] = nil
+		// fs.documents = fs.documents[:len(fs.documents)-1]
 	}
 }
 
@@ -255,7 +262,7 @@ func (fs *POIFSFileSystem) CreateDir(name string) (DirectoryEntry, error) {
 	return root.CreateDirectory(name), nil
 }
 
-//func (fs *POIFSFileSystem) CreateDocument(name string, data []byte) (DocumentEntry, error) {
+// func (fs *POIFSFileSystem) CreateDocument(name string, data []byte) (DocumentEntry, error) {
 func (fs *POIFSFileSystem) CreateDocument(name string, r io.Reader) (DocumentEntry, error) {
 	root, err := fs.GetRoot()
 	if err != nil {
@@ -501,7 +508,7 @@ func NewPOIFSDocFromManagedBlock2(name string, blocks []ListManagedBlock, length
 	return NewPOIFSDocFromManagedBlock(name, SMALLER_BIG_BLOCK_SIZE_DETAILS, blocks, length)
 }
 
-//func NewPOIFSDocFromStream2(name string, bigBlockSize POIFSBigBlockSize, data []byte) (*POIFSDocument, error) {
+// func NewPOIFSDocFromStream2(name string, bigBlockSize POIFSBigBlockSize, data []byte) (*POIFSDocument, error) {
 func NewPOIFSDocFromStream2(name string, bigBlockSize POIFSBigBlockSize, r io.Reader) (*POIFSDocument, error) {
 	blocks := make([]*DocumentBlock, 0)
 	doc := new(POIFSDocument)
@@ -542,7 +549,7 @@ func NewPOIFSDocFromStream2(name string, bigBlockSize POIFSBigBlockSize, r io.Re
 	return doc, nil
 }
 
-//func NewPOIFSDocFromStream(name string, data []byte) (*POIFSDocument, error) {
+// func NewPOIFSDocFromStream(name string, data []byte) (*POIFSDocument, error) {
 func NewPOIFSDocFromStream(name string, r io.Reader) (*POIFSDocument, error) {
 	return NewPOIFSDocFromStream2(name, SMALLER_BIG_BLOCK_SIZE_DETAILS, r) // data)
 }

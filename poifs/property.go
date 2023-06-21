@@ -57,12 +57,12 @@ const (
 	ROOT_TYPE                = 5
 )
 
-//returns negative if p1 < p2
+// returns negative if p1 < p2
 // zero if p1 == p2
 // positive if p1 > p2
 type Comparator func(p1, p2 IProperty) int
 
-//PropertySorter implements the Sort interface, Sorting the changes within
+// PropertySorter implements the Sort interface, Sorting the changes within
 type PropertyComparator struct {
 	properties []IProperty
 	compare    Comparator
@@ -74,7 +74,7 @@ func (pc *PropertyComparator) Sort(props []IProperty) {
 	sort.Sort(pc)
 }
 
-//returns a Comparator that sorts using the compare function
+// returns a Comparator that sorts using the compare function
 func PropertySorter(compare Comparator) *PropertyComparator {
 	return &PropertyComparator{compare: compare}
 }
@@ -118,10 +118,10 @@ type Parent interface {
 }
 
 /*
-type ChildProperty interface {
-	IProperty
-	Child
-}
+	type ChildProperty interface {
+		IProperty
+		Child
+	}
 */
 type ParentProperty interface {
 	IProperty
@@ -334,7 +334,7 @@ func (p *Property) GetIndex() int {
 	return p.index
 }
 
-//child the child property's index in the Property Table
+// child the child property's index in the Property Table
 func (p *Property) SetChildProperty(child int) {
 	p.child_property.Set(child, p.raw_data)
 }
@@ -511,10 +511,11 @@ func (doc *DirectoryProperty) removeEntry(prop IProperty) bool {
 
 	if found {
 		//Delete Entry
+		doc.children[idx] = nil
 		doc.children = append(doc.children[:idx], doc.children[idx+1:]...)
 		//Avoid potential memory leak, by nil out the pointer values
-		doc.children[len(doc.children)-1] = nil
-		doc.children = doc.children[:len(doc.children)-1]
+		//doc.children[len(doc.children)-1] = nil
+		//doc.children = doc.children[:len(doc.children)-1]
 	}
 	return found
 }
@@ -707,7 +708,7 @@ func NewPropertyTableWithList(hb *HeaderBlock, blocklist *rawDataBlockList) (*Pr
 	return pt, nil
 }
 
-//Prepare to be written
+// Prepare to be written
 func (pt *PropertyTable) PreWrite() {
 	// give each property its index
 	for index, prop := range pt.properties {
@@ -741,10 +742,10 @@ func (pt *PropertyTable) RemoveProperty(prop IProperty) {
 
 	if found {
 		//Delete Entry
+		pt.properties[idx] = nil
 		pt.properties = append(pt.properties[:idx], pt.properties[idx+1:]...)
 		//Avoid potential memory leak, by nil out the pointer values
-		pt.properties[len(pt.properties)-1] = nil
-		pt.properties = pt.properties[:len(pt.properties)-1]
+		//pt.properties = pt.properties[:len(pt.properties)-1]
 	}
 }
 

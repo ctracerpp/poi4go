@@ -477,15 +477,15 @@ func createDocumentBlock(bigBlockSize POIFSBigBlockSize) *DocumentBlock {
 	return db
 }
 
-//func DocumentBlockFromStream(data []byte, bigBlockSize POIFSBigBlockSize) (*DocumentBlock, error) {
+// func DocumentBlockFromStream(data []byte, bigBlockSize POIFSBigBlockSize) (*DocumentBlock, error) {
 func DocumentBlockFromStream(r io.Reader, bigBlockSize POIFSBigBlockSize) (db *DocumentBlock, err error) {
 	db = createDocumentBlock(bigBlockSize)
 	//copy(db.data, data)
 	db.bytes_read, err = io.ReadFull(r, db.data)
 	//db.bytes_read = len(db.data)
-	if err != nil && err != io.EOF {
-		return
-	}
+	//if err != nil && err != io.EOF {
+	//	return
+	//}
 	return db, nil
 }
 
@@ -674,7 +674,7 @@ func (pb *PropertyBlock) WriteBlocks(w io.Writer) error {
 	return nil
 }
 
-//Create a single instance initialized with default values
+// Create a single instance initialized with default values
 func NewBATBlock(bigBlockSize POIFSBigBlockSize) *BATBlock {
 	bb := &BATBlock{bigBlockSize: bigBlockSize,
 		values:           make([]int, bigBlockSize.BATEntriesPerBlock()),
@@ -685,7 +685,7 @@ func NewBATBlock(bigBlockSize POIFSBigBlockSize) *BATBlock {
 	return bb
 }
 
-//Create a single instance initialized (perhaps partially) with entries
+// Create a single instance initialized (perhaps partially) with entries
 func NewBATBlockWithEntries(bigBlockSize POIFSBigBlockSize, entries []int, start_index, end_index int) *BATBlock {
 	bb := NewBATBlock(bigBlockSize)
 	for k := start_index; k < end_index; k++ {

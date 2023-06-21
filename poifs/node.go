@@ -16,6 +16,7 @@ package poifs
 import (
 	"errors"
 	"io"
+	"strings"
 )
 
 type Entry interface {
@@ -23,8 +24,11 @@ type Entry interface {
 	IsDirectory() bool
 	IsDocument() bool
 	Parent() DirectoryEntry
-	Delete() bool
+	Delete(entry Entry) bool
 	RenameTo(newName string) bool
+	IsRoot() bool
+	IsDeleteOK() bool
+	GetProperty() IProperty
 }
 
 type DirectoryEntry interface {
@@ -95,14 +99,14 @@ func (en *EntryNode) Parent() DirectoryEntry {
 	return en.parent
 }
 func (en *EntryNode) IsDeleteOK() bool {
-	panic("This should never be reached.")
+	return false
 }
 
-func (en *EntryNode) Delete() bool {
+func (en *EntryNode) Delete(entry Entry) bool {
 	rval := false
 
-	if !en.IsRoot() && en.IsDeleteOK() {
-		rval = en.parent.DeleteEntry(en)
+	if !entry.IsRoot() && entry.IsDeleteOK() {
+		rval = en.parent.DeleteEntry(entry)
 	}
 	return rval
 }
@@ -184,7 +188,7 @@ func (dn *DirectoryNode) delEntry(entry Entry) {
 	var idx int
 	var e Entry
 	for idx, e = range dn.entries {
-		if e == entry {
+		if strings.EqualFold(e.GetName(), entry.GetName()) {
 			found = true
 			break
 		}
@@ -192,14 +196,16 @@ func (dn *DirectoryNode) delEntry(entry Entry) {
 
 	if found {
 		//Delete Entry
+		dn.entries[idx] = nil
 		dn.entries = append(dn.entries[:idx], dn.entries[idx+1:]...)
 		//Avoid potential memory leak, by nil out the pointer values
-		dn.entries[len(dn.entries)-1] = nil
-		dn.entries = dn.entries[:len(dn.entries)-1]
+		//dn.entries[len(dn.entries)-1] = nil
+		//dn.entries = dn.entries[:len(dn.entries)-1]
+		//dn.entries = dn.entries[:len(dn.entries)-1]
 	}
 }
 
-func (dn *DirectoryNode) DeleteEntry(entry *EntryNode) bool {
+func (dn *DirectoryNode) DeleteEntry(entry Entry) bool {
 	rval := dn.GetProperty().(ParentProperty).DelChild(entry.GetProperty())
 	if rval {
 		dn.delEntry(entry)
@@ -291,7 +297,7 @@ func (dn *DirectoryNode) createDocument(doc *POIFSDocument) DocumentEntry {
 	return rval
 }
 
-//func (dn *DirectoryNode) CreateDocument(name string, stream []byte) DocumentEntry {
+// func (dn *DirectoryNode) CreateDocument(name string, stream []byte) DocumentEntry {
 func (dn *DirectoryNode) CreateDocument(name string, stream io.Reader) DocumentEntry {
 	doc, err := NewPOIFSDocFromStream(name, stream)
 	if err != nil {
